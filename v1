@@ -1,0 +1,77 @@
+Sub LocateAndPrintRow()
+    
+    Dim searchValue As String
+    Dim searchRange As Range
+    Dim foundRow As Range
+    Dim newRow As Long
+    Dim ws As Worksheet
+    Dim concatRange As Range
+    Dim finalRange As Range
+    Dim rowData As String
+    Dim cellValue As Variant
+    Dim headerData As String
+    
+    ' Prompt the user to enter the search value
+    searchValue = InputBox("Enter the search value:")
+    
+    ' Set the search range to the entire workbook
+    Set searchRange = Nothing
+    
+    For Each ws In ActiveWorkbook.Sheets
+        If Not IsEmpty(ws.UsedRange) Then
+            If searchRange Is Nothing Then
+                Set searchRange = ws.UsedRange
+            Else
+                If concatRange Is Nothing Then
+                    Set concatRange = ws.UsedRange
+                Else
+                    Set concatRange = Range(concatRange.Address & "," & ws.UsedRange.Address)
+                End If
+            End If
+        End If
+    Next ws
+    
+    If Not concatRange Is Nothing Then
+        Set finalRange = concatRange
+    End If
+    
+    If Not finalRange Is Nothing Then
+        ' Search for the value in the search range
+        Set foundRow = finalRange.Find(What:=searchValue, LookIn:=xlValues, LookAt:=xlWhole)
+        
+        If foundRow Is Nothing Then
+            MsgBox "Value not found in the workbook.", vbInformation
+        Else
+            ' Get the row number of the found cell
+            newRow = foundRow.Row
+' Retrieve the data from the entire row
+Dim lastCol As Long
+Dim dataArr As Variant
+dataArr = foundRow.EntireRow.Value
+
+lastCol = UBound(dataArr, 2)
+rowData = ""
+For i = 1 To lastCol
+    rowData = rowData & IIf(IsEmpty(dataArr(1, i)), "", dataArr(1, i)) & vbTab
+Next i
+
+            ' Retrieve the header of the sheet
+            Dim headerRow As Range
+            Set headerRow = foundRow.Worksheet.Rows(1)
+            headerData = ""
+            For Each cellValue In headerRow.Value
+                headerData = headerData & cellValue & vbTab
+            Next cellValue
+            
+            ' Display the row data and header in a user form
+            RowDataForm.TextBox1.Text = "Header:" & vbNewLine & headerData & vbNewLine & vbNewLine & "Row Data:" & vbNewLine & rowData
+            RowDataForm.Show vbModal
+        End If
+    Else
+        MsgBox "No data found in the workbook.", vbInformation
+    End If
+    
+    Exit Sub
+    
+
+End Sub
